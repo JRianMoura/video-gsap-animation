@@ -19,6 +19,20 @@ export default function Home() {
       return undefined;
     }
 
+    // Função para limitar a frequência de chamadas do resize
+    const throttle = (func, limit) => {
+      let inThrottle;
+      return function () {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+          func.apply(context, args);
+          inThrottle = true;
+          setTimeout(() => (inThrottle = false), limit);
+        }
+      };
+    };
+
     let timeline;
 
     const buildAnimation = () => {
@@ -32,7 +46,7 @@ export default function Home() {
       const distancePerSecond = 0;
       const getScrollDistance = () =>
         Math.max(
-          window.innerHeight * 1.6,
+          window.innerHeight * 1.2,
           videoEl.duration * distancePerSecond
         );
 
@@ -45,8 +59,8 @@ export default function Home() {
           trigger: containerEl,
           start: "top top",
           end: () => `+=${getScrollDistance()}`,
-          scrub: 1,
-          markers: true,
+          scrub: true,
+          // markers: true,
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
@@ -86,9 +100,9 @@ export default function Home() {
       videoEl.addEventListener("loadedmetadata", handleLoadedMetadata);
     }
 
-    const handleResize = () => {
+    const handleResize = throttle(() => {
       ScrollTrigger.refresh();
-    };
+    }, 250);
 
     window.addEventListener("resize", handleResize);
 
@@ -110,10 +124,13 @@ export default function Home() {
         >
           <video
             className="video-bg absolute inset-0 h-full w-full object-cover"
-            src="video/praia.mp4"
+            src="video/teste.mp4"
             muted
-            preload="auto"
+            preload="metadata"
             playsInline
+            loading="lazy"
+            poster="/video/poster-image.jpg"
+            decoding="async"
             id="video"
             ref={videoRef}
           />
@@ -137,7 +154,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-500 via-blue-300 to-white px-6">
+      <section className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white via-green-200 to-white px-6">
         <div className="max-w-3xl space-y-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
             Proxima secao
