@@ -8,12 +8,14 @@ export default function Home() {
     gsap.registerPlugin(ScrollTrigger);
     const videoEl = document.querySelector("#video");
     const container = document.querySelector("#video-section");
+    const textEl = document.querySelector("#hero-text");
 
-    if (!videoEl || !container) {
+    if (!videoEl || !container || !textEl) {
       return undefined;
     }
 
     let scrollTriggerInstance;
+    let textAnimation;
     const updateCurrentTime = (progress) => {
       if (!videoEl.duration) return;
       videoEl.currentTime = progress * videoEl.duration;
@@ -27,25 +29,45 @@ export default function Home() {
       videoEl.pause();
       updateCurrentTime(0);
 
-      const distancePerSecond = 320;
+      const distancePerSecond = 450;
       const getScrollDistance = () =>
         Math.max(
           window.innerHeight * 1.6,
           videoEl.duration * distancePerSecond
         );
 
+      textAnimation?.kill();
       scrollTriggerInstance?.kill();
+
+      textAnimation = gsap.to(textEl, {
+        opacity: 0,
+        y: 72,
+        ease: "power2.out",
+        duration: 1,
+        paused: true,
+      });
+
+      textAnimation.progress(0).pause();
 
       scrollTriggerInstance = ScrollTrigger.create({
         trigger: container,
         start: "top top",
         end: () => `+=${getScrollDistance()}`,
-        scrub: 0.7,
+        scrub: 3,
         pin: true,
         anticipatePin: 1,
-        onUpdate: (self) => updateCurrentTime(self.progress),
-        onLeave: () => updateCurrentTime(1),
-        onLeaveBack: () => updateCurrentTime(0),
+        onUpdate: (self) => {
+          updateCurrentTime(self.progress);
+          textAnimation.progress(Math.min(self.progress * 1.1, 1));
+        },
+        onLeave: () => {
+          updateCurrentTime(1);
+          textAnimation.progress(1);
+        },
+        onLeaveBack: () => {
+          updateCurrentTime(0);
+          textAnimation.progress(0);
+        },
       });
 
       ScrollTrigger.refresh();
@@ -70,6 +92,7 @@ export default function Home() {
 
     return () => {
       scrollTriggerInstance?.kill();
+      textAnimation?.kill();
       window.removeEventListener("resize", handleResize);
       videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
@@ -77,10 +100,10 @@ export default function Home() {
 
   return (
     <main className="bg-white text-gray-900">
-      <section className="relative min-h-screen">
+      <section className="relative min-h-screen bg-black text-white">
         <div
           id="video-section"
-          className="relative h-screen w-full overflow-hidden"
+          className="relative flex h-screen w-full items-center justify-center overflow-hidden"
         >
           <video
             className="video-bg absolute inset-0 h-full w-full object-cover"
@@ -90,6 +113,23 @@ export default function Home() {
             playsInline
             id="video"
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-tranparent via-black/40 to-tranparent" />
+          <div
+            id="hero-text"
+            className="relative z-10 max-w-4xl space-y-6 px-6 text-center"
+          >
+            <p className="text-xs uppercase tracking-[0.6em] text-slate-200">
+              Exemplo
+            </p>
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              Titulo chamativo sobre o seu projeto aqui
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg text-slate-200/80">
+              Use este bloco para compartilhar uma mensagem curta enquanto o
+              video de fundo cria a atmosfera desejada. Edite o texto como
+              quiser.
+            </p>
+          </div>
         </div>
       </section>
       <section className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-500 via-blue-300 to-white px-6">
