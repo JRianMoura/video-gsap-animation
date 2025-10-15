@@ -1,85 +1,87 @@
 "use client";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 export default function Home() {
+  const sectionRef = useRef(null);
+  const videoRef = useRef(null);
+  const textRef = useRef(null);
+
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
-    const videoEl = document.querySelector("#video");
-    const container = document.querySelector("#video-section");
-    const textEl = document.querySelector("#hero-text");
 
-    if (!videoEl || !container || !textEl) {
+    const videoEl = videoRef.current;
+    const containerEl = sectionRef.current;
+    const textEl = textRef.current;
+
+    if (!videoEl || !containerEl || !textEl) {
       return undefined;
     }
 
-    let scrollTriggerInstance;
-    let textAnimation;
-    const updateCurrentTime = (progress) => {
-      if (!videoEl.duration) return;
-      videoEl.currentTime = progress * videoEl.duration;
-    };
+    let timeline;
 
-    const createScrollTrigger = () => {
+    const buildAnimation = () => {
       if (!videoEl.duration) {
         return;
       }
 
       videoEl.pause();
-      updateCurrentTime(0);
+      videoEl.currentTime = 0;
 
-      const distancePerSecond = 450;
+      const distancePerSecond = 0;
       const getScrollDistance = () =>
         Math.max(
           window.innerHeight * 1.6,
           videoEl.duration * distancePerSecond
         );
 
-      textAnimation?.kill();
-      scrollTriggerInstance?.kill();
+      timeline?.scrollTrigger?.kill();
+      timeline?.kill();
 
-      textAnimation = gsap.to(textEl, {
-        opacity: 0,
-        y: 72,
-        ease: "power2.out",
-        duration: 1,
-        paused: true,
-      });
-
-      textAnimation.progress(0).pause();
-
-      scrollTriggerInstance = ScrollTrigger.create({
-        trigger: container,
-        start: "top top",
-        end: () => `+=${getScrollDistance()}`,
-        scrub: 3,
-        pin: true,
-        anticipatePin: 1,
-        onUpdate: (self) => {
-          updateCurrentTime(self.progress);
-          textAnimation.progress(Math.min(self.progress * 1.1, 1));
-        },
-        onLeave: () => {
-          updateCurrentTime(1);
-          textAnimation.progress(1);
-        },
-        onLeaveBack: () => {
-          updateCurrentTime(0);
-          textAnimation.progress(0);
+      timeline = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: containerEl,
+          start: "top top",
+          end: () => `+=${getScrollDistance()}`,
+          scrub: 1,
+          markers: true,
+          pin: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
         },
       });
 
-      ScrollTrigger.refresh();
+      timeline.to(
+        videoEl,
+        {
+          currentTime: videoEl.duration,
+        },
+        0
+      );
+
+      timeline.to(
+        textEl,
+        {
+          opacity: 0,
+          y: 72,
+          ease: "power2.out",
+          duration: 0.6,
+        },
+        0
+      );
+
+      requestAnimationFrame(() => ScrollTrigger.refresh());
     };
 
     const handleLoadedMetadata = () => {
-      createScrollTrigger();
+      buildAnimation();
       videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
 
     if (videoEl.readyState >= 1) {
-      createScrollTrigger();
+      buildAnimation();
     } else {
       videoEl.addEventListener("loadedmetadata", handleLoadedMetadata);
     }
@@ -91,10 +93,10 @@ export default function Home() {
     window.addEventListener("resize", handleResize);
 
     return () => {
-      scrollTriggerInstance?.kill();
-      textAnimation?.kill();
       window.removeEventListener("resize", handleResize);
       videoEl.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      timeline?.scrollTrigger?.kill();
+      timeline?.kill();
     };
   }, []);
 
@@ -103,6 +105,7 @@ export default function Home() {
       <section className="relative min-h-screen bg-black text-white">
         <div
           id="video-section"
+          ref={sectionRef}
           className="relative flex h-screen w-full items-center justify-center overflow-hidden"
         >
           <video
@@ -112,10 +115,12 @@ export default function Home() {
             preload="auto"
             playsInline
             id="video"
+            ref={videoRef}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-tranparent via-black/40 to-tranparent" />
           <div
             id="hero-text"
+            ref={textRef}
             className="relative z-10 max-w-4xl space-y-6 px-6 text-center"
           >
             <p className="text-xs uppercase tracking-[0.6em] text-slate-200">
