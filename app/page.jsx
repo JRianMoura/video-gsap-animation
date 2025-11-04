@@ -43,7 +43,7 @@ export default function Home() {
       videoEl.pause();
       videoEl.currentTime = 0;
 
-      const distancePerSecond = 0;
+      const distancePerSecond = 300;
       const getScrollDistance = () =>
         Math.max(
           window.innerHeight * 1.2,
@@ -124,7 +124,7 @@ export default function Home() {
         >
           <video
             className="video-bg absolute inset-0 h-full w-full object-cover"
-            src="video/teste.mp4"
+            src="video/praia1.mp4"
             muted
             preload="metadata"
             playsInline
@@ -144,7 +144,7 @@ export default function Home() {
               Exemplo
             </p>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Titulo chamativo sobre o seu projeto aqui
+              Titulo chamativo sobre o projeto aqui
             </h1>
             <p className="mx-auto max-w-2xl text-lg text-slate-200/80">
               Use este bloco para compartilhar uma mensagem curta enquanto o
